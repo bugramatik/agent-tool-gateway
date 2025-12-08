@@ -1,0 +1,224 @@
+# Sample catalog: twelve tools that point at internal-style services.
+# Each entry matches gateway.models.ToolSpec. URLs use example.com hosts.
+
+- name: customer.lookup
+  description: Look up a customer record by email or customer id.
+  method: GET
+  url: https://crm.example.com/api/customers
+  input_schema:
+    type: object
+    properties:
+      email:
+        type: string
+        format: email
+      customer_id:
+        type: string
+    anyOf:
+      - required: [email]
+      - required: [customer_id]
+  allowed_callers: [assistant, analyst-console]
+  rate_limit_per_minute: 120
+  timeout_s: 2.0
+  retries: 1
+
+- name: customer.update_contact
+  description: Update the contact details of a customer record.
+  method: PATCH
+  url: https://crm.example.com/api/customers/{customer_id}
+  input_schema:
+    type: object
+    properties:
+      customer_id:
+        type: string
+      phone:
+        type: string
+      address:
+        type: string
+    required: [customer_id]
+  allowed_callers: [analyst-console]
+  rate_limit_per_minute: 30
+  timeout_s: 3.0
+  retries: 0
+
+- name: invoice.list_open
+  description: List unpaid invoices for a customer.
+  method: GET
+  url: https://billing.example.com/api/invoices
+  input_schema:
+    type: object
+    properties:
+      customer_id:
+        type: string
+      due_before:
+        type: string
+        format: date
+    required: [customer_id]
+  allowed_callers: [assistant, analyst-console]
+  rate_limit_per_minute: 60
+  timeout_s: 2.0
+  retries: 2
+
+- name: invoice.send_reminder
+  description: Send a payment reminder for one invoice.
+  method: POST
+  url: https://billing.example.com/api/invoices/{invoice_id}/reminders
+  input_schema:
+    type: object
+    properties:
+      invoice_id:
+        type: string
+      channel:
+        type: string
+        enum: [email, sms]
+    required: [invoice_id, channel]
+  allowed_callers: [analyst-console]
+  rate_limit_per_minute: 20
+  timeout_s: 4.0
+  retries: 0
+
+- name: kyc.status
+  description: Read the identity verification status of a customer.
+  method: GET
+  url: https://identity.example.com/api/checks
+  input_schema:
+    type: object
+    properties:
+      customer_id:
+        type: string
+    required: [customer_id]
+  allowed_callers: [assistant, analyst-console, compliance-bot]
+  rate_limit_per_minute: 90
+  timeout_s: 2.0
+  retries: 1
+
+- name: kyc.start_check
+  description: Start a new identity verification check for a customer.
+  method: POST
+  url: https://identity.example.com/api/checks
+  input_schema:
+    type: object
+    properties:
+      customer_id:
+        type: string
+      level:
+        type: string
+        enum: [basic, enhanced]
+    required: [customer_id, level]
+  allowed_callers: [analyst-console]
+  rate_limit_per_minute: 15
+  timeout_s: 5.0
+  retries: 0
+
+- name: docs.search
+  description: Search the internal document repository and return matching passages.
+  method: POST
+  url: https://docs.example.com/api/search
+  input_schema:
+    type: object
+    properties:
+      query:
+        type: string
+        minLength: 3
+      top_k:
+        type: integer
+        minimum: 1
+        maximum: 20
+    required: [query]
+  allowed_callers: [assistant, compliance-bot]
+  rate_limit_per_minute: 200
+  timeout_s: 2.5
+  retries: 1
+
+- name: docs.fetch
+  description: Fetch one document by its identifier.
+  method: GET
+  url: https://docs.example.com/api/documents/{document_id}
+  input_schema:
+    type: object
+    properties:
+      document_id:
+        type: string
+    required: [document_id]
+  allowed_callers: [assistant, compliance-bot]
+  rate_limit_per_minute: 200
+  timeout_s: 2.0
+  retries: 1
+
+- name: tickets.create
+  description: Open a support ticket on behalf of a customer.
+  method: POST
+  url: https://support.example.com/api/tickets
+  input_schema:
+    type: object
+    properties:
+      customer_id:
+        type: string
+      subject:
+        type: string
+        maxLength: 120
+      body:
+        type: string
+        maxLength: 4000
+      priority:
+        type: string
+        enum: [low, normal, high]
+    required: [customer_id, subject, body]
+  allowed_callers: [assistant, analyst-console]
+  rate_limit_per_minute: 40
+  timeout_s: 3.0
+  retries: 1
+
+- name: tickets.list
+  description: List open tickets for a customer.
+  method: GET
+  url: https://support.example.com/api/tickets
+  input_schema:
+    type: object
+    properties:
+      customer_id:
+        type: string
+      status:
+        type: string
+        enum: [open, pending, closed]
+    required: [customer_id]
+  allowed_callers: [assistant, analyst-console]
+  rate_limit_per_minute: 60
+  timeout_s: 2.0
+  retries: 1
+
+- name: payments.refund
+  description: Refund a settled payment, up to the original amount.
+  method: POST
+  url: https://payments.example.com/api/refunds
+  input_schema:
+    type: object
+    properties:
+      payment_id:
+        type: string
+      amount_cents:
+        type: integer
+        minimum: 1
+      reason:
+        type: string
+        maxLength: 200
+    required: [payment_id, amount_cents, reason]
+  allowed_callers: [analyst-console]
+  rate_limit_per_minute: 10
+  timeout_s: 5.0
+  retries: 0
+
+- name: reports.daily_summary
+  description: Fetch the daily operations summary for a given date.
+  method: GET
+  url: https://reports.example.com/api/daily
+  input_schema:
+    type: object
+    properties:
+      date:
+        type: string
+        format: date
+    required: [date]
+  allowed_callers: [assistant, analyst-console, compliance-bot]
+  rate_limit_per_minute: 30
+  timeout_s: 4.0
+  retries: 2

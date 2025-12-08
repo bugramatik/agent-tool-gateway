@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-tool-gateway-catalog
+  labels:
+    app.kubernetes.io/name: agent-tool-gateway
+data:
+  tools.yaml: |
+    - name: customers.lookup
+      description: Look up a customer record by email address.
+      method: GET
+      url: http://customer-service.internal/v1/customers
+      input_schema:
+        type: object
+        properties:
+          email:
+            type: string
+            format: email
+        required: [email]
+        additionalProperties: false
+      allowed_callers: [assistant, analyst-console]
+      rate_limit_per_minute: 120
+      timeout_s: 2.0
+      retries: 1
+    - name: invoices.list
+      description: List invoices for a customer, newest first.
+      method: GET
+      url: http://billing-service.internal/v1/invoices
+      input_schema:
+        type: object
+        properties:
+          customer_id:
+            type: string
+          limit:
+            type: integer
+            minimum: 1
+            maximum: 50
+        required: [customer_id]
+        additionalProperties: false
+      allowed_callers: [assistant, analyst-console]
+      rate_limit_per_minute: 60
+      timeout_s: 2.0
+      retries: 2
+    - name: tickets.create
+      description: Open a support ticket for a customer.
+      method: POST
+      url: http://support-service.internal/v1/tickets
+      input_schema:
+        type: object
+        properties:
+          customer_id:
+            type: string
+          subject:
+            type: string
+            maxLength: 120
+          body:
+            type: string
+        required: [customer_id, subject, body]
+        additionalProperties: false
+      allowed_callers: [assistant]
+      rate_limit_per_minute: 20
+      timeout_s: 3.0
+      retries: 0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-tool-gateway
+  labels:
+    app.kubernetes.io/name: agent-tool-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: agent-tool-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: agent-tool-gateway
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: gateway
+          image: ghcr.io/example/agent-tool-gateway:0.3.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: GATEWAY_HOST
+              value: "0.0.0.0"
+            - name: GATEWAY_PORT
+              value: "8080"
+            - name: GATEWAY_CATALOG_PATH
+              value: /etc/gateway/tools.yaml
+            - name: GATEWAY_LOG_LEVEL
+              value: info
+            - name: GATEWAY_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: agent-tool-gateway-db
+                  key: database-url
+          volumeMounts:
+            - name: catalog
+              mountPath: /etc/gateway
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: catalog
+          configMap:
+            name: agent-tool-gateway-catalog
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-tool-gateway
+  labels:
+    app.kubernetes.io/name: agent-tool-gateway
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: agent-tool-gateway
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
