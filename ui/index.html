@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Tool Gateway</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --ink: #1c2024;
+    --muted: #6b7280;
+    --line: #e3e6ea;
+    --accent: #2f6feb;
+    --accent-soft: #e8f0fe;
+    --ok: #1f8a4c;
+    --warn: #b26a00;
+    --bad: #b42318;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 24px;
+    height: 56px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+  .mark {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-size: 13px; font-weight: 700;
+  }
+  nav { display: flex; gap: 4px; }
+  nav a {
+    color: var(--muted); text-decoration: none; padding: 6px 10px; border-radius: 6px; font-size: 13px;
+  }
+  nav a.active { color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .spacer { flex: 1; }
+  .env {
+    font-size: 12px; color: var(--muted); border: 1px solid var(--line);
+    padding: 3px 8px; border-radius: 999px;
+  }
+  main { padding: 20px 24px 32px; max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 2px; font-weight: 600; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+  }
+  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .card .value { font-size: 24px; font-weight: 600; margin-top: 6px; }
+  .card .note { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 14px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+  }
+  .panel-head h2 { font-size: 13px; margin: 0; font-weight: 600; }
+  .panel-head span { color: var(--muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 16px; font-size: 13px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; background: #fafbfc; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 500;
+  }
+  .pill.ok { color: var(--ok); background: #e7f5ec; }
+  .pill.deny { color: var(--bad); background: #fdecea; }
+  .pill.dry { color: var(--warn); background: #fdf3e2; }
+  .chart { padding: 14px 16px 6px; }
+  .legend { display: flex; gap: 16px; padding: 0 16px 14px; color: var(--muted); font-size: 12px; }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
+  .feed { padding: 4px 0; }
+  .feed div { padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .feed div:last-child { border-bottom: none; }
+  .feed code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--accent); }
+  .feed small { color: var(--muted); display: block; margin-top: 2px; }
+  footer { color: var(--muted); font-size: 12px; padding: 18px 24px 0; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="mark">G</div>Agent Tool Gateway</div>
+  <nav>
+    <a href="#" class="active">Overview</a>
+    <a href="#">Tools</a>
+    <a href="#">Audit</a>
+    <a href="#">Policies</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="env">cluster: staging &middot; v0.3.0</div>
+</header>
+
+<main>
+  <h1>Gateway overview</h1>
+  <div class="sub">Last 24 hours &middot; 12 registered tools &middot; 3 callers</div>
+
+  <section class="cards">
+    <div class="card">
+      <div class="label">Calls</div>
+      <div class="value">10,412</div>
+      <div class="note">+6.2% vs previous day</div>
+    </div>
+    <div class="card">
+      <div class="label">Median overhead</div>
+      <div class="value">38 ms</div>
+      <div class="note">gateway time per call</div>
+    </div>
+    <div class="card">
+      <div class="label">Under 2 s timeout</div>
+      <div class="value">99.4%</div>
+      <div class="note">10k call load test</div>
+    </div>
+    <div class="card">
+      <div class="label">Policy denials</div>
+      <div class="value">57</div>
+      <div class="note">0.5% of calls</div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Calls per hour</h2>
+        <span>ok / denied / dry-run</span>
+      </div>
+      <div class="chart">
+        <svg viewBox="0 0 640 200" width="100%" height="200" role="img" aria-label="Calls per hour bar chart">
+          <line x1="40" y1="170" x2="620" y2="170" stroke="#e3e6ea" />
+          <line x1="40" y1="120" x2="620" y2="120" stroke="#eef0f3" />
+          <line x1="40" y1="70" x2="620" y2="70" stroke="#eef0f3" />
+          <line x1="40" y1="20" x2="620" y2="20" stroke="#eef0f3" />
+          <text x="8" y="174" font-size="10" fill="#6b7280">0</text>
+          <text x="8" y="124" font-size="10" fill="#6b7280">200</text>
+          <text x="8" y="74" font-size="10" fill="#6b7280">400</text>
+          <text x="8" y="24" font-size="10" fill="#6b7280">600</text>
+          <g id="bars"></g>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i style="background:#2f6feb"></i>answered</span>
+        <span><i style="background:#b42318"></i>denied</span>
+        <span><i style="background:#b26a00"></i>dry-run</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Top tools</h2><span>by calls</span></div>
+      <table>
+        <thead><tr><th>Tool</th><th>Calls</th><th>p95</th></tr></thead>
+        <tbody id="topTools"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="grid" style="margin-top:14px">
+    <section class="panel">
+      <div class="panel-head"><h2>Recent calls</h2><span>audit trail</span></div>
+      <table>
+        <thead><tr><th>Time</th><th>Tool</th><th>Caller</th><th>Status</th><th>Latency</th></tr></thead>
+        <tbody id="recent"></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Policy events</h2><span>last hour</span></div>
+      <div class="feed" id="feed"></div>
+    </section>
+  </div>
+
+  <footer>Gateway overhead measured on the call route, excluding upstream time.</footer>
+</main>
+
+<script>
+  const hourly = [
+    { h: "00", ok: 210, deny: 2, dry: 6 },
+    { h: "02", ok: 160, deny: 1, dry: 4 },
+    { h: "04", ok: 140, deny: 0, dry: 3 },
+    { h: "06", ok: 260, deny: 3, dry: 8 },
+    { h: "08", ok: 420, deny: 6, dry: 12 },
+    { h: "10", ok: 520, deny: 9, dry: 15 },
+    { h: "12", ok: 480, deny: 7, dry: 11 },
+    { h: "14", ok: 540, deny: 8, dry: 14 },
+    { h: "16", ok: 500, deny: 6, dry: 10 },
+    { h: "18", ok: 380, deny: 5, dry: 9 },
+    { h: "20", ok: 300, deny: 4, dry: 7 },
+    { h: "22", ok: 240, deny: 3, dry: 5 }
+  ];
+
+  const topTools = [
+    { name: "crm.lookup_customer", calls: 3120, p95: "142 ms" },
+    { name: "billing.list_invoices", calls: 2410, p95: "188 ms" },
+    { name: "docs.search", calls: 1980, p95: "310 ms" },
+    { name: "tickets.create", calls: 1240, p95: "96 ms" },
+    { name: "inventory.check_stock", calls: 870, p95: "74 ms" }
+  ];
+
+  const recent = [
+    { t: "14:52:07", tool: "crm.lookup_customer", caller: "assistant-web", status: "ok", ms: 41 },
+    { t: "14:51:58", tool: "billing.list_invoices", caller: "assistant-web", status: "ok", ms: 63 },
+    { t: "14:51:44", tool: "tickets.create", caller: "ops-agent", status: "deny", ms: 3 },
+    { t: "14:51:31", tool: "docs.search", caller: "assistant-web", status: "ok", ms: 118 },
+    { t: "14:51:12", tool: "inventory.check_stock", caller: "ops-agent", status: "dry", ms: 2 },
+    { t: "14:50:55", tool: "crm.lookup_customer", caller: "assistant-web", status: "ok", ms: 37 },
+    { t: "14:50:40", tool: "billing.list_invoices", caller: "finance-agent", status: "ok", ms: 71 },
+    { t: "14:50:22", tool: "docs.search", caller: "assistant-web", status: "ok", ms: 96 }
+  ];
+
+  const feed = [
+    { tool: "tickets.create", text: "caller ops-agent not in allowed list", when: "14:51:44" },
+    { tool: "billing.list_invoices", text: "rate limit 60/min reached for finance-agent", when: "14:48:10" },
+    { tool: "crm.lookup_customer", text: "retry 1 of 2 after upstream 503", when: "14:44:02" },
+    { tool: "docs.search", text: "arguments rejected: missing field query", when: "14:39:27" },
+    { tool: "inventory.check_stock", text: "dry-run resolved request, upstream not called", when: "14:36:51" }
+  ];
+
+  const NS = "http://www.w3.org/2000/svg";
+  const bars = document.getElementById("bars");
+  const maxTotal = Math.max(...hourly.map(d => d.ok + d.deny + d.dry));
+  const slot = 580 / hourly.length;
+  const barW = 22;
+  const scale = 150 / maxTotal;
+
+  hourly.forEach((d, i) => {
+    const x = 40 + i * slot + (slot - barW) / 2;
+    const okH = d.ok * scale;
+    const denyH = d.deny * scale;
+    const dryH = d.dry * scale;
+    let y = 170;
+
+    const parts = [
+      { h: okH, fill: "#2f6feb" },
+      { h: denyH, fill: "#b42318" },
+      { h: dryH, fill: "#b26a00" }
+    ];
+    parts.forEach(p => {
+      if (p.h <= 0) return;
+      y -= p.h;
+      const r = document.createElementNS(NS, "rect");
+      r.setAttribute("x", x);
+      r.setAttribute("y", y.toFixed(1));
+      r.setAttribute("width", barW);
+      r.setAttribute("height", p.h.toFixed(1));
+      r.setAttribute("fill", p.fill);
+      r.setAttribute("rx", 2);
+      bars.appendChild(r);
+    });
+
+    const label = document.createElementNS(NS, "text");
+    label.setAttribute("x", x + barW / 2);
+    label.setAttribute("y", 186);
+    label.setAttribute("font-size", "10");
+    label.setAttribute("fill", "#6b7280");
+    label.setAttribute("text-anchor", "middle");
+    label.textContent = d.h;
+    bars.appendChild(label);
+  });
+
+  const topBody = document.getElementById("topTools");
+  topTools.forEach(t => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><code style="font-family:ui-monospace,Menlo,monospace;font-size:12px">${t.name}</code></td>` +
+      `<td class="num">${t.calls.toLocaleString()}</td><td class="num">${t.p95}</td>`;
+    topBody.appendChild(tr);
+  });
+
+  const recentBody = document.getElementById("recent");
+  const pillClass = { ok: "ok", deny: "deny", dry: "dry" };
+  const pillText = { ok: "ok", deny: "denied", dry: "dry-run" };
+  recent.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="num">${r.t}</td>` +
+      `<td><code style="font-family:ui-monospace,Menlo,monospace;font-size:12px">${r.tool}</code></td>` +
+      `<td>${r.caller}</td>` +
+      `<td><span class="pill ${pillClass[r.status]}">${pillText[r.status]}</span></td>` +
+      `<td class="num">${r.ms} ms</td>`;
+    recentBody.appendChild(tr);
+  });
+
+  const feedEl = document.getElementById("feed");
+  feed.forEach(f => {
+    const div = document.createElement("div");
+    div.innerHTML = `<code>${f.tool}</code><small>${f.text} &middot; ${f.when}</small>`;
+    feedEl.appendChild(div);
+  });
+</script>
+</body>
+</html>
